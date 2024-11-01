@@ -1,0 +1,5 @@
+
+# Logger
+logging.level:
+  web: DEBUG
+  '[com.bptn.feedapp]': DEBUG
