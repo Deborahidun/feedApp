@@ -14,37 +14,37 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user")
+@Table(name = "user", schema = "public")
 public class User implements Serializable {
+
 	private static final long serialVersionUID = 1L;
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "userId")
+	@Column(name = "\"userId\"")
 	private Integer userId;
 
-	@Column(name = "firstName")
+	@Column(name = "\"firstName\"")
 	private String firstName;
 
-	@Column(name = "lastName")
+	@Column(name = "\"lastName\"")
 	private String lastName;
 
-	@Column(name = "username")
+	@Column(name = "\"username\"")
 	private String username;
 
-	@Column(name = "password")
 	@JsonProperty(access = Access.WRITE_ONLY)
 	private String password;
 
-	@Column(name = "phone")
+	@Column(name = "\"phone\"")
 	private String phone;
 
-	@Column(name = "emailId")
+	@Column(name = "\"emailId\"")
 	private String emailId;
 
-	@Column(name = "emailVerified")
+	@Column(name = "\"emailVerified\"")
 	private Boolean emailVerified;
 
-	@Column(name = "createdOn")
+	@Column(name = "\"createdOn\"")
 	private Timestamp createdOn;
 
 	public User() {
