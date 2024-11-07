@@ -1,5 +1,7 @@
 package com.bptn.feedApp.service;
 
+import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,5 +30,24 @@ public class UserService {
 	// Method to create a new user
 	public void createUser(User user) {
 		this.userRepository.save(user);
+	}
+
+	// Method to sign up a new user
+	public User signup(User user) {
+		// Convert username and emailId to lowercase
+		user.setUsername(user.getUsername().toLowerCase());
+		user.setEmailId(user.getEmailId().toLowerCase());
+
+		// Set emailVerified to false
+		user.setEmailVerified(false);
+
+		// Set createdOn to the current timestamp
+		user.setCreatedOn(Timestamp.from(Instant.now()));
+
+		// Save the user to the database
+		this.userRepository.save(user);
+
+		// Return the saved user object
+		return user;
 	}
 }
