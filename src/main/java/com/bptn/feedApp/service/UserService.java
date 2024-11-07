@@ -17,6 +17,9 @@ public class UserService {
 	@Autowired
 	UserRepository userRepository;
 
+	@Autowired
+	EmailService emailService; // Autowire EmailService
+
 	// Method to list all users
 	public List<User> listUsers() {
 		return this.userRepository.findAll();
@@ -46,6 +49,9 @@ public class UserService {
 
 		// Save the user to the database
 		this.userRepository.save(user);
+
+		// Send the verification email after saving the user
+		this.emailService.sendVerificationEmail(user);
 
 		// Return the saved user object
 		return user;
