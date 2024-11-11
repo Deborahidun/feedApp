@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.bptn.feedApp.exception.domain.EmailExistException;
+import com.bptn.feedApp.exception.domain.UserNotFoundException;
 import com.bptn.feedApp.exception.domain.UsernameExistException;
 import com.bptn.feedApp.jpa.User;
 import com.bptn.feedApp.repository.UserRepository;
@@ -74,5 +76,21 @@ public class UserService {
 
 		// Return the saved user object
 		return user;
+	}
+
+	// Method to verify email of the logged-in user
+	public void verifyEmail() {
+		// Retrieve the username of the currently logged-in user
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		// Find the User object by username, throw exception if not found
+		User user = this.userRepository.findByUsername(username)
+				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
+
+		// Update the emailVerified property to true
+		user.setEmailVerified(true);
+
+		// Save the updated User object to the database
+		this.userRepository.save(user);
 	}
 }
