@@ -21,6 +21,7 @@ import com.bptn.feedApp.service.UserService;
 @RestController
 @RequestMapping("/user")
 public class UserController {
+
 	final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
@@ -47,8 +48,8 @@ public class UserController {
 	@GetMapping("/{first}/{last}/{username}/{password}/{phone}/{emailId}")
 	public String createUser(@PathVariable String first, @PathVariable String last, @PathVariable String username,
 			@PathVariable String password, @PathVariable String phone, @PathVariable String emailId) {
-		User user = new User();
 
+		User user = new User();
 		user.setFirstName(first);
 		user.setLastName(last);
 		user.setUsername(username);
@@ -59,7 +60,6 @@ public class UserController {
 		user.setCreatedOn(Timestamp.from(Instant.now()));
 
 		logger.debug("The createUser() method was invoked!, user={}", user.toString());
-
 		this.userService.createUser(user);
 
 		return "User Created Successfully";
@@ -70,5 +70,12 @@ public class UserController {
 	public User signup(@RequestBody User user) {
 		logger.debug("Signing up, username: {}", user.getUsername());
 		return this.userService.signup(user);
+	}
+
+	// New verifyEmail method as per the instructions
+	@GetMapping("/verify/email")
+	public void verifyEmail() {
+		logger.debug("Verifying Email");
+		this.userService.verifyEmail();
 	}
 }
