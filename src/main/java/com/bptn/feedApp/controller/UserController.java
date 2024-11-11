@@ -97,4 +97,11 @@ public class UserController {
 
 		return new ResponseEntity<>(user, jwtHeader, OK);
 	}
+
+	// New method to handle password reset email request
+	@GetMapping("/reset/{emailId}")
+	public void sendResetPasswordEmail(@PathVariable String emailId) {
+		logger.debug("Sending Reset Password Email, emailId: {}", emailId);
+		this.userService.sendResetPasswordEmail(emailId);
+	}
 }
