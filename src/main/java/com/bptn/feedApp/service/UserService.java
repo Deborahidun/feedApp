@@ -6,15 +6,22 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.bptn.feedApp.exception.domain.EmailExistException;
+import com.bptn.feedApp.exception.domain.EmailNotVerifiedException;
 import com.bptn.feedApp.exception.domain.UserNotFoundException;
 import com.bptn.feedApp.exception.domain.UsernameExistException;
 import com.bptn.feedApp.jpa.User;
+import com.bptn.feedApp.provider.ResourceProvider;
 import com.bptn.feedApp.repository.UserRepository;
+import com.bptn.feedApp.security.JwtService;
 
 @Service
 public class UserService {
@@ -23,10 +30,19 @@ public class UserService {
 	UserRepository userRepository;
 
 	@Autowired
-	EmailService emailService; // Autowire EmailService
+	EmailService emailService;
 
 	@Autowired
-	PasswordEncoder passwordEncoder; // Autowire PasswordEncoder
+	PasswordEncoder passwordEncoder;
+
+	@Autowired
+	AuthenticationManager authenticationManager;
+
+	@Autowired
+	JwtService jwtService;
+
+	@Autowired
+	ResourceProvider provider;
 
 	// Method to list all users
 	public List<User> listUsers() {
@@ -56,41 +72,58 @@ public class UserService {
 
 	// Updated signup method with validation and password encryption
 	public User signup(User user) {
-		// Convert username and emailId to lowercase
 		user.setUsername(user.getUsername().toLowerCase());
 		user.setEmailId(user.getEmailId().toLowerCase());
 
-		// Validate username and email for duplication
 		this.validateUsernameAndEmail(user.getUsername(), user.getEmailId());
 
-		// Set emailVerified to false and encrypt the password
 		user.setEmailVerified(false);
 		user.setPassword(this.passwordEncoder.encode(user.getPassword()));
 		user.setCreatedOn(Timestamp.from(Instant.now()));
 
-		// Save the user to the database
 		this.userRepository.save(user);
-
-		// Send the verification email after saving the user
 		this.emailService.sendVerificationEmail(user);
 
-		// Return the saved user object
+		return user;
+	}
+
+	// Static method to check if email is verified
+	private static User isEmailVerified(User user) {
+		if (user.getEmailVerified().equals(false)) {
+			throw new EmailNotVerifiedException(String.format("Email requires verification, %s", user.getEmailId()));
+		}
+
 		return user;
 	}
 
 	// Method to verify email of the logged-in user
 	public void verifyEmail() {
-		// Retrieve the username of the currently logged-in user
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
-
-		// Find the User object by username, throw exception if not found
 		User user = this.userRepository.findByUsername(username)
 				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
 
-		// Update the emailVerified property to true
 		user.setEmailVerified(true);
-
-		// Save the updated User object to the database
 		this.userRepository.save(user);
+	}
+
+	// Helper method for authentication
+	private Authentication authenticate(String username, String password) {
+		return this.authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
+	}
+
+	// Overloaded authenticate method
+	public User authenticate(User user) {
+		this.authenticate(user.getUsername(), user.getPassword());
+
+		return this.userRepository.findByUsername(user.getUsername()).map(UserService::isEmailVerified).get();
+	}
+
+	// Method to generate JWT headers
+	public HttpHeaders generateJwtHeader(String username) {
+		HttpHeaders headers = new HttpHeaders();
+		headers.add(HttpHeaders.AUTHORIZATION,
+				this.jwtService.generateJwtToken(username, this.provider.getJwtExpiration()));
+
+		return headers;
 	}
 }
