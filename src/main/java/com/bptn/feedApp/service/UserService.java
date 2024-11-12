@@ -141,4 +141,20 @@ public class UserService {
 			logger.debug("Email doesn't exist, {}", emailId);
 		}
 	}
+
+	// New method to reset password
+	public void resetPassword(String password) {
+		// Retrieve the username of the logged-in user
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		// Retrieve the user from the repository using the username
+		User user = this.userRepository.findByUsername(username)
+				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
+
+		// Set the new encoded password
+		user.setPassword(this.passwordEncoder.encode(password));
+
+		// Save the updated user object
+		this.userRepository.save(user);
+	}
 }
