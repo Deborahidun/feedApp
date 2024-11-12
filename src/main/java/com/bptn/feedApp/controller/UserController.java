@@ -119,4 +119,11 @@ public class UserController {
 		logger.debug("Getting User Data");
 		return this.userService.getUser();
 	}
+
+	// New method to update user data
+	@PostMapping("/update")
+	public User updateUser(@RequestBody User user) {
+		logger.debug("Updating User Data");
+		return this.userService.updateUser(user);
+	}
 }
