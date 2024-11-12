@@ -157,4 +157,13 @@ public class UserService {
 		// Save the updated user object
 		this.userRepository.save(user);
 	}
+
+	// New method to get the authenticated user
+	public User getUser() {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		/* Get User from the DB. */
+		return this.userRepository.findByUsername(username)
+				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
+	}
 }

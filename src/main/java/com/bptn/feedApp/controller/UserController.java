@@ -112,4 +112,11 @@ public class UserController {
 		logger.debug("Resetting Password, password: {}", json.get("password").asText());
 		this.userService.resetPassword(json.get("password").asText());
 	}
+
+	// New method to retrieve the authenticated user's details
+	@GetMapping("/get")
+	public User getUser() {
+		logger.debug("Getting User Data");
+		return this.userService.getUser();
+	}
 }
