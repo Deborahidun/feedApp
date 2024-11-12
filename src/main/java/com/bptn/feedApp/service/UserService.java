@@ -23,6 +23,7 @@ import com.bptn.feedApp.exception.domain.EmailExistException;
 import com.bptn.feedApp.exception.domain.EmailNotVerifiedException;
 import com.bptn.feedApp.exception.domain.UserNotFoundException;
 import com.bptn.feedApp.exception.domain.UsernameExistException;
+import com.bptn.feedApp.jpa.Profile;
 import com.bptn.feedApp.jpa.User;
 import com.bptn.feedApp.provider.ResourceProvider;
 import com.bptn.feedApp.repository.UserRepository;
@@ -31,7 +32,7 @@ import com.bptn.feedApp.security.JwtService;
 @Service
 public class UserService {
 
-	private final Logger logger = LoggerFactory.getLogger(this.getClass()); // Added logger instance
+	private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
 	@Autowired
 	UserRepository userRepository;
@@ -170,18 +171,18 @@ public class UserService {
 				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
 	}
 
-	// Step 1: Define the updateValue method
+	// Define the updateValue method
 	private void updateValue(Supplier<String> getter, Consumer<String> setter) {
 		Optional.ofNullable(getter.get()).map(String::trim).ifPresent(setter);
 	}
 
-	// Step 2: Define the updatePassword method
+	// Define the updatePassword method
 	private void updatePassword(Supplier<String> getter, Consumer<String> setter) {
 		Optional.ofNullable(getter.get()).filter(StringUtils::hasText).map(this.passwordEncoder::encode)
 				.ifPresent(setter);
 	}
 
-	// Step 3: Define the updateUser method
+	// Define the updateUser method
 	private User updateUser(User user, User currentUser) {
 		this.updateValue(user::getFirstName, currentUser::setFirstName);
 		this.updateValue(user::getLastName, currentUser::setLastName);
@@ -192,7 +193,7 @@ public class UserService {
 		return this.userRepository.save(currentUser);
 	}
 
-	// Step 4: Define the public updateUser method
+	// Define the public updateUser method
 	public User updateUser(User user) {
 		String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
@@ -204,6 +205,32 @@ public class UserService {
 
 		// Get and update user
 		return this.userRepository.findByUsername(username).map(currentUser -> this.updateUser(user, currentUser))
+				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
+	}
+
+	// Define the updateUserProfile helper method
+	private User updateUserProfile(Profile profile, User user) {
+		Profile currentProfile = user.getProfile();
+
+		if (Optional.ofNullable(currentProfile).isPresent()) {
+			this.updateValue(profile::getHeadline, currentProfile::setHeadline);
+			this.updateValue(profile::getBio, currentProfile::setBio);
+			this.updateValue(profile::getCity, currentProfile::setCity);
+			this.updateValue(profile::getCountry, currentProfile::setCountry);
+			this.updateValue(profile::getPicture, currentProfile::setPicture);
+		} else {
+			user.setProfile(profile);
+			profile.setUser(user);
+		}
+
+		return this.userRepository.save(user);
+	}
+
+	// Define the public updateUserProfile method
+	public User updateUserProfile(Profile profile) {
+		String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+		return this.userRepository.findByUsername(username).map(user -> this.updateUserProfile(profile, user))
 				.orElseThrow(() -> new UserNotFoundException(String.format("Username doesn't exist, %s", username)));
 	}
 }
